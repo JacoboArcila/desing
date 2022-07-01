@@ -1,72 +1,75 @@
-import { closestCenter, DndContext, PointerSensor, useSensor } from '@dnd-kit/core';
-import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import React, { useState } from 'react';
-import Cards from '../../components/cards/Cards';
-import './Home.css';
+import React, { useState } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import { data } from "../../data";
+import {Container} from './HomeStyles.js';
+import { Cards } from "../../components/cards/Cards";
 
-function Home() {
-  const [items, setItems] = useState([
-    {
-      id: "1",
-      name: "H"
-    },
-    {
-      id: "2",
-      name: "E"
-    },
-    {
-      id: "3",
-      name: "L"
-    },
-    {
-      id: "4",
-      name: "L"
-    },
-    {
-      id: "5",
-      name: "O"
-    }
-  ])
+export default function Home() {
+  const [items, setItems] = useState(data);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
-  const sensors = [useSensor(PointerSensor)];
+  return (
+    <Container>
+      <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext
+        items={items.map(( i ) => i.id)}
+        strategy={rectSortingStrategy}
+      >
+        <Grid>
+          {items.map(( i ) => (
+            <Cards key={i.id} id={i.id} text={i.text} />
+          ))}
+        </Grid>
+      </SortableContext>
+    </DndContext>
+    </Container>
+  );
 
-  const handleDragEnd = ({active, over}) => {
+  function handleDragEnd(event) {
+    const { active, over } = event;
     if (active.id !== over.id) {
       setItems((items) => {
-        const oldIndex = items.findIndex(item => item.id === active.id)
-        const newIndex = items.findIndex(item => item.id === over.id)
+        const oldIndex = items.findIndex(({ id }) => id === active.id);
+        const newIndex = items.findIndex(({ id }) => id === over.id);
 
-        return arrayMove(items, oldIndex, newIndex)
-      })
+        return arrayMove(items, oldIndex, newIndex);
+      });
     }
   }
+}
 
+function Grid({ children }) {
   return (
     <div
       style={{
-        margin: 'auto',
-        width: 200,
-        textAlign: 'center'
+        display: "inline-grid",
+        gridTemplateColumns: "repeat(6, 1fr)",
+        gridGap: 19,
       }}
     >
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext
-          items={items.map(item => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {
-            items.map(
-              item => <Cards {...item} key={item.id} />
-            )
-          }
-        </SortableContext>
-      </DndContext>
+      {children}
     </div>
   );
 }
-
-export default Home;

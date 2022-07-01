@@ -5,4 +5,5 @@ export const Container = styled.div`
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    margin: 20px auto;
 `
